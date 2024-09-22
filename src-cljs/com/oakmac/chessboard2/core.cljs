@@ -108,10 +108,11 @@
         (swap! board-state assoc :dragging? true
                                  :dragging-el (dom-util/get-element dragging-piece-id)
                                  :dragging-starting-square square
-                                 :dragging-starting-piece piece)))))
+                                 :dragging-starting-piece piece)))
 
-        ;; TODO: hide (or delete?) the piece on the source square
-        ;;       or leave it on there and fade it somewhat
+        ;; remove the piece from the source square
+        (let [updated-position (dissoc position square)]
+          (api/set-position! board-state updated-position {:animate false}))))
         ;; TODO: they could return an object from their onDragStart function to control what happens
         ;;       to the source piece
 
@@ -345,10 +346,9 @@
       dropped-square
       (do ;; destroy the dragging piece
           (dom-util/remove-element! dragging-el)
-          ;; perform an instant move
-          (api/move-pieces board-state [{:animate false
-                                         :from dragging-starting-square
-                                         :to dropped-square}])
+          ;; actually place the piece
+          (let [updated-position (assoc position dropped-square dragging-starting-piece)]
+            (api/set-position! board-state updated-position {:animate false}))
           ;; update board state
           (swap! board-state dissoc :dragging?
                                     :dragging-el
